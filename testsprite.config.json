@@ -1,0 +1,48 @@
+{
+  "project": {
+    "name": "AtomShereAI",
+    "type": "react-native-expo",
+    "framework": "expo",
+    "language": "typescript"
+  },
+  "testSettings": {
+    "platforms": ["ios", "android", "web"],
+    "testTypes": ["unit", "integration", "e2e"],
+    "timeout": 30000
+  },
+  "entryPoints": {
+    "main": "app/(tabs)/index.tsx",
+    "explore": "app/(tabs)/explore.tsx",
+    "onboarding": "app/onboarding/index.tsx"
+  },
+  "keyFeatures": [
+    "City search with autocomplete",
+    "Weather data display",
+    "AI-powered weather summaries",
+    "Location services",
+    "Theme switching (light/dark)",
+    "Onboarding flow"
+  ],
+  "apiEndpoints": {
+    "weather": "services/api.ts",
+    "location": "services/nearbyService.ts",
+    "ai": "services/gemini.ts"
+  },
+  "testPriorities": {
+    "critical": [
+      "City search functionality",
+      "Weather data fetching",
+      "API error handling"
+    ],
+    "high": [
+      "Location services",
+      "Weather display accuracy",
+      "Navigation flow"
+    ],
+    "medium": [
+      "Theme switching",
+      "Onboarding flow",
+      "AI summary generation"
+    ]
+  }
+}

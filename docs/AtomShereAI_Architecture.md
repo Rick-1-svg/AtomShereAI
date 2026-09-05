@@ -1,0 +1,62 @@
+---
+title: AtomShereAI Project Architecture
+---
+
+# AtomShereAI Project Architecture
+
+```mermaid
+graph TD
+  A[app/ (Expo Router screens)] --> B1((tabs/ - navigation))
+  A --> B2(onboarding/ - onboarding flow)
+  A --> B3(modal.tsx, notifications.tsx, _layout.tsx)
+  B1 --> C1[index.tsx (Home)]
+  B1 --> C2[explore.tsx (Weather details)]
+  B1 --> C3[_layout.tsx (Tab config)]
+
+  D[components/] --> D1[ui/ (Reusable UI)]
+  D --> D2[weather/ (Weather UI)]
+  D2 --> D2a[AISummary.tsx]
+  D2 --> D2b[CityBottomSheet.tsx]
+  D2 --> D2c[charts/]
+  D2 --> D2d[forecast/]
+  D2 --> D2e[skeletons/]
+  D --> D3[notifications/]
+  D --> D4[onboarding/]
+  D --> D5[home/]
+
+  E[constants/] --> E1[theme.ts]
+
+  F[hooks/] --> F1[stores/ (Zustand)]
+  F --> F2[use-location.ts]
+  F --> F3[use-network-status.ts]
+  F --> F4[use-weather-theme.ts]
+
+  G[services/] --> G1[api.ts (Weather API)]
+  G --> G2[gemini.ts (AI)]
+  G --> G3[cacheService.ts]
+  G --> G4[notificationService.ts]
+  G --> G5[nearbyService.ts]
+  G --> G6[requestDedup.ts]
+  G --> G7[retryUtils.ts]
+  G --> G8[searchQueue.ts]
+
+  H[types/] --> H1[weather.ts]
+  H --> H2[aiSummary.ts]
+  H --> H3[notifications.ts]
+
+  I[utils/] --> I1[transformWeatherData.ts]
+
+  J[assets/] --> J1[images/]
+  J --> J2[fonts/]
+
+  K[docs/]
+  L[scripts/]
+  M[__tests__/]
+  N[android/]
+  O[dist/]
+  P[app.json, package.json, tsconfig.json, ...]
+```
+
+---
+
+This diagram represents the high-level architecture of the AtomShereAI project, showing the main folders and their relationships. For a detailed breakdown, see the README or request a specific section.

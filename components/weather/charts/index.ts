@@ -1,0 +1,1 @@
+export { PrecipitationChart } from './PrecipitationChart';
