@@ -139,13 +139,16 @@ Revolutionize weather forecasting by providing actionable, understandable AI-pow
   - [React Native Iconify](https://www.npmjs.com/package/react-native-iconify) for icons
 
 ### Backend & APIs
-- **Weather Data**: [OpenWeatherMap API](https://openweathermap.org/api)
+- **API Proxy**: Node.js server in `server/index.js`
+- **Weather Provider**: [OpenWeatherMap API](https://openweathermap.org/api), accessed only by the proxy
   - Current Weather API
   - 5-Day Forecast API
   - Geocoding API (city search)
   - Air Pollution API
-- **AI Integration**: [Google Gemini API](https://ai.google.dev/) (gemini-2.5-flash-lite-preview)
+- **AI Provider**: [Google Gemini API](https://ai.google.dev/), accessed only by the proxy
 - **Data Fetching**: [@tanstack/react-query](https://tanstack.com/query/latest) 5.90.2 for server state management
+
+The Expo bundle contains only the proxy address. OpenWeatherMap and Gemini keys are loaded by the Node.js proxy from `.env` and are never sent to the mobile app.
 
 ### Development Tools
 - **Package Manager**: npm
@@ -386,6 +389,9 @@ AtomShereAI/
 │   ├── retryUtils.ts            # Retry logic
 │   └── searchQueue.ts           # Search optimization
 │
+├── server/
+│   └── index.js                 # Secret-holding API proxy
+│
 ├── types/                        # TypeScript type definitions
 │   ├── weather.ts               # Weather data types
 │   ├── aiSummary.ts             # AI insights types
@@ -405,6 +411,8 @@ AtomShereAI/
 │   ├── clearStorage.js
 │   └── start-server-for-tests.js
 │
+├── .env.example                  # Environment variable template
+│
 ├── dist/                         # Web build output
 ├── __tests__/                    # Test files
 ├── android/                      # Android native code
@@ -423,58 +431,36 @@ AtomShereAI/
 
 ## 🔌 API Integration
 
-### OpenWeatherMap API
+The app uses a small Node.js proxy so provider credentials remain on the server:
 
-The app integrates with multiple OpenWeatherMap endpoints:
-
-#### Current Weather
-```typescript
-GET https://api.openweathermap.org/data/2.5/weather
-Parameters:
-  - lat: Latitude
-  - lon: Longitude
-  - units: metric
-  - appid: API_KEY
+```text
+Expo app -> http://localhost:3001 -> API proxy -> OpenWeatherMap / Gemini
 ```
 
-#### 5-Day Forecast
-```typescript
-GET https://api.openweathermap.org/data/2.5/forecast
-Parameters:
-  - lat: Latitude
-  - lon: Longitude
-  - units: metric
-  - appid: API_KEY
+The Expo client calls these proxy routes:
+
+| Client route | Proxies to | Purpose |
+| --- | --- | --- |
+| `GET /weather` | OpenWeather current weather | Current conditions |
+| `GET /forecast` | OpenWeather forecast | Five-day forecast |
+| `GET /air-quality` | OpenWeather air pollution | AQI |
+| `GET /geo/direct` | OpenWeather geocoding | City search |
+| `GET /geo/reverse` | OpenWeather reverse geocoding | Nearby/current city lookup |
+| `POST /gemini` | Google Gemini | AI summaries and recommendations |
+| `GET /health` | Proxy | Health check |
+
+### Provider Configuration
+
+Set these variables in the root `.env` file. Never put provider keys in `services/`, `app/`, `app.json`, or any `EXPO_PUBLIC_*` variable.
+
+```env
+OPENWEATHER_API_KEY=your_openweather_api_key
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL_NAME=gemini-2.5-flash-lite-preview-09-2025
+API_PORT=3001
 ```
 
-#### Geocoding (City Search)
-```typescript
-GET https://api.openweathermap.org/geo/1.0/direct
-Parameters:
-  - q: City name
-  - limit: 5
-  - appid: API_KEY
-```
-
-#### Air Pollution
-```typescript
-GET https://api.openweathermap.org/data/2.5/air_pollution
-Parameters:
-  - lat: Latitude
-  - lon: Longitude
-  - appid: API_KEY
-```
-
-**Rate Limits**: Free tier allows 1,000 calls/day
-
-### Google Gemini AI
-
-The app uses Google Gemini for AI-powered weather insights:
-
-```typescript
-Model: gemini-2.5-flash-lite-preview-09-2025
-Endpoint: https://generativelanguage.googleapis.com/v1beta/models/
-```
+Copy `.env.example` to `.env` and replace the placeholder values. The `.env` file is ignored by Git. Rotate any key that has previously been committed or shared.
 
 **Features**:
 - Natural language weather summaries
@@ -492,6 +478,8 @@ Endpoint: https://generativelanguage.googleapis.com/v1beta/models/
 ```bash
 # Start development server
 npm start
+npm run api           # Start the API proxy
+npm run api:watch     # Start the API proxy with Node watch mode
 npm run web:port      # Start web on specific port (8081)
 
 # Platform-specific development
@@ -501,11 +489,18 @@ npm run web           # Run web version
 
 # Testing
 npm run test:server   # Start test server
+npm exec -- tsc --noEmit --pretty false
+npm run lint
+
+# API proxy health check, while `npm run api` is running
+# PowerShell:
+Invoke-WebRequest -UseBasicParsing http://localhost:3001/health
 
 # Utilities
 npm run reset-project # Reset project to template
-npm run lint          # Run ESLint
 ```
+
+The repository does not currently define a Jest/Vitest test script. The existing service tests and TestSprite scenarios are documented separately and may require additional test-runner setup.
 
 ### Code Style
 
@@ -547,14 +542,17 @@ __tests__/
 
 ### Running Tests
 ```bash
-# Run all tests
-npm test
+# Type-check the project
+npm exec -- tsc --noEmit --pretty false
 
-# Run tests in watch mode
-npm run test:watch
+# Run ESLint
+npm run lint
 
-# Generate coverage report
-npm run test:coverage
+# Start the Expo web server for TestSprite/browser checks
+npm run test:server
+
+# Start the API proxy for API smoke tests
+npm run api
 ```
 
 ### Testing Strategy
@@ -562,6 +560,13 @@ npm run test:coverage
 - **Integration Tests**: API integrations
 - **Component Tests**: UI components
 - **E2E Tests**: Complete user workflows
+
+### API Proxy Smoke Test
+
+1. Start the proxy with `npm run api`.
+2. Confirm `http://localhost:3001/health` returns `{"ok":true}`.
+3. Start Expo with `npm start`.
+4. For a physical device, set `EXPO_PUBLIC_API_URL` to the computer's LAN address, such as `http://192.168.1.10:3001`, and ensure the device can reach that port.
 
 ---
 
@@ -616,12 +621,16 @@ Deploy the `dist/` folder to:
 Create separate configurations for development and production:
 
 **Development**:
-- Use test API keys
+- Run the API proxy with local `.env` credentials
+- Set `EXPO_PUBLIC_API_URL` only when the app cannot use `localhost`
 - Enable debugging
 - Disable analytics
 
 **Production**:
-- Use production API keys
+- Deploy `server/index.js` separately from the Expo app
+- Store provider keys in the server environment, not in the Expo build
+- Set the production proxy URL as `EXPO_PUBLIC_API_URL`
+- Restrict proxy CORS to known app clients and add rate limiting before public deployment
 - Disable debugging
 - Enable analytics
 - Enable error tracking
@@ -708,8 +717,23 @@ We welcome contributions from the community! Here's how you can help:
 **Problem**: 404 errors or "Invalid API key"
 **Solution**: 
 - Verify your OpenWeatherMap API key is valid
-- Check if the API key is correctly added to `services/api.ts`
+- Check that `OPENWEATHER_API_KEY` is set in the proxy's `.env`
+- Restart `npm run api` after changing `.env`
 - Ensure you're not exceeding rate limits
+
+#### Gemini or Weather Requests Fail in the App
+**Problem**: The app cannot load weather or AI insights
+**Solution**:
+- Confirm the proxy is running with `npm run api`
+- Check `http://localhost:3001/health`
+- On a physical device, use the computer's LAN IP in `EXPO_PUBLIC_API_URL`; `localhost` points to the device itself
+- Confirm `GEMINI_API_KEY` and `OPENWEATHER_API_KEY` are present in the proxy environment
+
+#### API Proxy Port Is Already in Use
+**Problem**: `npm run api` cannot listen on port 3001
+**Solution**:
+- Stop the process using port 3001, or set another `API_PORT` in `.env`
+- Set the matching port in `EXPO_PUBLIC_API_URL`
 
 #### Location Permission Denied
 **Problem**: Can't access current location
