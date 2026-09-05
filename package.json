@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "api": "node ./server/index.js",
+    "api:watch": "node --watch ./server/index.js",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "build:dev:android": "eas build --profile development --platform android",

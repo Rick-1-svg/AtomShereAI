@@ -199,33 +199,22 @@ cd AtomShereAI
 npm install
 ```
 
-### 3. Configure API Keys
+### 3. Configure the API proxy
 
-#### Option A: Direct Configuration (Quick Start)
-Edit the API keys directly in the source files:
-
-**OpenWeatherMap API Key**:
-```bash
-# Edit services/api.ts
-# Line 7: Replace with your API key
-const API_KEY = 'YOUR_OPENWEATHER_API_KEY_HERE';
-```
-
-**Google Gemini API Key**:
-```bash
-# Edit services/gemini.ts
-# Line 4: Replace with your API key
-const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
-```
-
-#### Option B: Environment Variables (Recommended)
-Create a `.env` file in the root directory:
+The Expo app never receives provider API keys. Run the local proxy from the project root and create a `.env` file:
 ```env
 OPENWEATHER_API_KEY=your_openweather_api_key
 GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL_NAME=gemini-2.5-flash-lite-preview-09-2025
+API_PORT=3001
 ```
 
-Then update the service files to use environment variables.
+Start it with:
+```bash
+npm run api
+```
+
+For a physical device, set `EXPO_PUBLIC_API_URL` to the proxy's LAN address before starting Expo, for example `EXPO_PUBLIC_API_URL=http://192.168.1.10:3001`. This value is a public service URL, not a secret.
 
 ### 4. Start the Development Server
 ```bash

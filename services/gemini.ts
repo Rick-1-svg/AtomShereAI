@@ -1,10 +1,7 @@
 import { AIWeatherInsight, EMPTY_INSIGHT } from '../types/aiSummary';
 import { ForecastData, WeatherData } from '../types/weather';
 
-const GEMINI_API_KEY = 'AIzaSyAeE1xCM2BBgXZ_PIBgb4CP20IWlc5zn1k'; // Replace with your actual Gemini API key
-// Using the model that's actually working with your API key
-const GEMINI_MODEL_NAME = 'gemini-2.5-flash-lite-preview-09-2025'; // This model is working with your API key
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent`;
+const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 /**
  * Build weather data context string for prompts
@@ -35,24 +32,12 @@ ${forecastData.forecast.slice(0, 8).map(item => `
  * Make a request to the Gemini API
  */
 const callGeminiAPI = async (prompt: string): Promise<string | null> => {
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(`${API_BASE_URL}/gemini`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }],
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-      ],
-    }),
+    body: JSON.stringify({ prompt }),
   });
 
   if (!response.ok) {

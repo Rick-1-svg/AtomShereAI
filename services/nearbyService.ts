@@ -1,7 +1,7 @@
 import { City } from '../types/weather';
 
-const API_KEY = process.env.OPENWEATHER_API_KEY || '54feda8961a67020c70fb7a54f9f4bf3';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
+const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/$/, '');
+const GEO_URL = `${API_BASE_URL}/geo`;
 
 export interface NearbyCity extends City {
     distance: number; // Distance in km
@@ -44,7 +44,7 @@ const formatDistance = (distanceKm: number): string => {
 const getCurrentLocationCity = async (lat: number, lon: number): Promise<NearbyCity | null> => {
     try {
         const response = await fetch(
-            `${GEO_URL}/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`
+            `${GEO_URL}/reverse?lat=${lat}&lon=${lon}&limit=1`
         );
 
         if (!response.ok) {
@@ -87,7 +87,7 @@ const searchCitiesNear = async (
 ): Promise<NearbyCity[]> => {
     try {
         const response = await fetch(
-            `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`
+            `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5`
         );
 
         if (!response.ok) {
@@ -175,7 +175,7 @@ export const getNearbyCities = async (
 
             try {
                 const response = await fetch(
-                    `${GEO_URL}/reverse?lat=${searchLat}&lon=${searchLon}&limit=3&appid=${API_KEY}`
+                    `${GEO_URL}/reverse?lat=${searchLat}&lon=${searchLon}&limit=3`
                 );
 
                 if (!response.ok) return [];
@@ -312,7 +312,7 @@ export const getNearbyCitiesExtended = async (
 
         try {
             const response = await fetch(
-                `${GEO_URL}/reverse?lat=${searchLat}&lon=${searchLon}&limit=2&appid=${API_KEY}`
+                `${GEO_URL}/reverse?lat=${searchLat}&lon=${searchLon}&limit=2`
             );
 
             if (!response.ok) continue;

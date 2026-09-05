@@ -4,10 +4,7 @@ import { getGeminiWeatherSummary, getStructuredWeatherInsights } from './gemini'
 import { deduplicateRequest, getWeatherKey } from './requestDedup';
 import { fetchWithRetry } from './retryUtils';
 
-const API_KEY = process.env.OPENWEATHER_API_KEY || '54feda8961a67020c70fb7a54f9f4bf3'; // IMPORTANT: Replace 'YOUR_OPENWEATHER_API_KEY_HERE' with your actual OpenWeatherMap API key, or set the OPENWEATHER_API_KEY environment variable. A 404 error often indicates an invalid API key.
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-const GEO_URL = 'https://api.openweathermap.org/geo/1.0';
-const AIR_URL = 'https://api.openweathermap.org/data/2.5/air_pollution';
+const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3001').replace(/\/$/, '');
 
 /**
  * Search for cities by name with autocomplete
@@ -21,7 +18,7 @@ export const searchCities = async (query: string): Promise<SearchResult> => {
     }
 
     const response = await fetch(
-      `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`
+      `${API_BASE_URL}/geo/direct?q=${encodeURIComponent(query)}&limit=5`
     );
 
     if (!response.ok) {
@@ -60,8 +57,8 @@ export const getCurrentWeather = async (lat: number, lon: number): Promise<Weath
 
   return deduplicateRequest(requestKey, async () => {
     return fetchWithRetry(async () => {
-      const url = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
-      console.log('🌐 API: Fetching weather from:', url.replace(API_KEY, '[API_KEY]'));
+      const url = `${API_BASE_URL}/weather?lat=${lat}&lon=${lon}`;
+      console.log('🌐 API: Fetching weather from:', url);
 
       const response = await fetch(url);
 
@@ -124,9 +121,7 @@ export const getForecast = async (lat: number, lon: number): Promise<ForecastDat
 
   return deduplicateRequest(requestKey, async () => {
     return fetchWithRetry(async () => {
-      const response = await fetch(
-        `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
-      );
+      const response = await fetch(`${API_BASE_URL}/forecast?lat=${lat}&lon=${lon}`);
 
       if (!response.ok) {
         const error = new Error(`API error: ${response.status}`);
@@ -203,7 +198,7 @@ export const getAirQuality = async (lat: number, lon: number): Promise<number | 
 
   return deduplicateRequest(requestKey, async () => {
     return fetchWithRetry(async () => {
-      const response = await fetch(`${AIR_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}`);
+      const response = await fetch(`${API_BASE_URL}/air-quality?lat=${lat}&lon=${lon}`);
       if (!response.ok) {
         const error = new Error(`API error: ${response.status}`);
         (error as any).status = response.status;
